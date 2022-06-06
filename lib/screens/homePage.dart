@@ -40,7 +40,7 @@ class _HomePageState extends State<HomePage> {
   //   fillColor: Colors.transparent,
   // );
 
-  Set<Marker> _markers = {};
+  final Set<Marker> _markers = {};
 
   /// Geolocator Methods
 
@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
           },
           onDragEnd: (dragEndPosition) {
           },
-          infoWindow: InfoWindow(title: 'Marker'),
+          infoWindow: const InfoWindow(title: 'Marker'),
           icon: BitmapDescriptor.defaultMarker,
         ),
       );
@@ -109,27 +109,51 @@ class _HomePageState extends State<HomePage> {
       ),
       extendBodyBehindAppBar: true,
       drawer: const NavBar(),
-      body: GoogleMap(
-        mapType: MapType.hybrid,
-        markers: _markers,
-        polygons: const {},
-        initialCameraPosition: _kGooglePlex,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-        myLocationButtonEnabled: false,
-        onTap: _handleTap,
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: const Icon(Icons.pin_drop),
-        onPressed: () async {
-          Position position = await _determinePosition();
-          
-          _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14));
+      body: Stack(
+          children: [
+            Positioned(
+              child: GoogleMap(
+                mapType: MapType.hybrid,
+                markers: _markers,
+                polygons: const {},
+                initialCameraPosition: _kGooglePlex,
+                onMapCreated: (GoogleMapController controller) {
+                  _controller.complete(controller);
+                  },
+                myLocationButtonEnabled: false,
+                onTap: _handleTap,
+              ),
+            ),
+            Positioned(
+              bottom: 10,
+                right: 10,
+                child: FloatingActionButton(
+                  child: const Icon(Icons.pin_drop),
+                  onPressed: () async {
+                    Position position = await _determinePosition();
 
-          _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
-        },
+                    _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14));
+
+                    setState(() {
+                      _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
+                    });
+                  },
+                )
+            ),
+        ]
       ),
+      // floatingActionButton: FloatingActionButton(
+      //   child: const Icon(Icons.pin_drop),
+      //   onPressed: () async {
+      //     Position position = await _determinePosition();
+      //
+      //     _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14));
+      //
+      //     setState(() {
+      //       _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
+      //     });
+      //   },
+      // ),
     );
   }
 }
