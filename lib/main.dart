@@ -19,7 +19,6 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'iGPS',
       theme: ThemeData(
-        primarySwatch: Colors.blueGrey,
         appBarTheme: const AppBarTheme(
           color: Colors.blueGrey,
         ),

@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 
+const double PIN_VISIBLE_POSITION = 15;
+const double PIN_INVISIBLE_POSITION = -220;
+
 enum CurrentAction {
   NoAction,
   MarkerAction,
@@ -93,26 +96,33 @@ class _HomePageState extends State<HomePage> {
 
   CurrentAction currentAction = CurrentAction.NoAction;
 
+  double markerPillPosition = PIN_INVISIBLE_POSITION;
+
   /// Other methods
 
   void _handleTap(LatLng tappedPoint) {
-    if (currentAction == CurrentAction.MarkerAction) {
-      setState(() {
-        _markers.add(
-          Marker(
-            markerId: MarkerId(tappedPoint.toString()),
-            position: tappedPoint,
-            draggable: true,
-            onDragStart: (dragStartPosition) {
-            },
-            onDragEnd: (dragEndPosition) {
-            },
-            infoWindow: const InfoWindow(title: 'Marker'),
-            icon: BitmapDescriptor.defaultMarker,
-          ),
-        );
-      });
-    }
+    setState(() {
+      Marker newMarker = Marker(
+        markerId: MarkerId(tappedPoint.toString()),
+        position: tappedPoint,
+        draggable: true,
+        onTap: () {
+          setState(() {
+            markerPillPosition = PIN_VISIBLE_POSITION;
+          });
+        },
+        onDragStart: (dragStartPosition) {
+          markerPillPosition = PIN_VISIBLE_POSITION;
+        },
+        onDragEnd: (dragEndPosition) {},
+        infoWindow: const InfoWindow(title: 'Marker'),
+        icon: BitmapDescriptor.defaultMarker,
+      );
+      if (currentAction == CurrentAction.MarkerAction) {
+        _markers.add(newMarker);
+      }
+      markerPillPosition = PIN_INVISIBLE_POSITION;
+    });
   }
 
   IconData isMarkerDone() {
@@ -131,14 +141,14 @@ class _HomePageState extends State<HomePage> {
           "iGPS",
           style: TextStyle(
             fontSize: 25,
-            fontWeight: FontWeight.w800,
+            fontWeight: FontWeight.w700,
           ),
         ),
         iconTheme: const IconThemeData(
-          size: 26.0,
+          size: 25.0,
           color: Colors.white,
         ),
-        backgroundColor: Colors.black.withOpacity(0.3),
+        backgroundColor: Colors.black.withOpacity(0.2),
         actions: [
           IconButton(
             onPressed: () {
@@ -175,7 +185,7 @@ class _HomePageState extends State<HomePage> {
       drawer: const NavBar(),
       body: Stack(
           children: [
-            Positioned(
+            Positioned.fill(
               child: GoogleMap(
                 mapType: MapType.hybrid,
                 markers: _markers,
@@ -196,6 +206,7 @@ class _HomePageState extends State<HomePage> {
                 right: 15,
                 child: SafeArea(
                   child: FloatingActionButton(
+                    heroTag: "currentLocation",
                     backgroundColor: Colors.white,
                     foregroundColor: Colors.lightBlue,
                     onPressed: () async {
@@ -210,11 +221,12 @@ class _HomePageState extends State<HomePage> {
                 )
             ),
             Positioned(
-                bottom: MediaQuery.of(context).size.height / 2,
-                right: 15,
+                bottom: MediaQuery.of(context).size.height / 2 - 40,
+                right: 10,
                 child: Column(
                   children: [
                     FloatingActionButton.small(
+                      heroTag: "zoomIn",
                       onPressed: () {
                         setState(() {
                           _zoomInAndOut(0.45);
@@ -225,6 +237,7 @@ class _HomePageState extends State<HomePage> {
                       child: const Icon(Icons.add),
                     ),
                     FloatingActionButton.small(
+                      heroTag: "zoomOut",
                       onPressed: () {
                         setState(() {
                           _zoomInAndOut(-0.45);
@@ -236,6 +249,91 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 )
+            ),
+            AnimatedPositioned(
+              bottom: markerPillPosition,
+              right: 15,
+              left: 15,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              child: Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20.0),
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.5),
+                      blurRadius: 10,
+                      offset: Offset.zero,
+                    )
+                  ]
+                ),
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      width: 40,
+                      child: Divider(height: 3, thickness: 3,color: Colors.grey),
+                    ),
+                    const SizedBox(height: 25,),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const Expanded(
+                          flex: 1,
+                          child: ClipOval(
+                            child: Icon(
+                              Icons.location_on,
+                              size: 70.0,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20,),
+                        Expanded(
+                          flex: 4,
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                children: const [
+                                  Text(
+                                    "Marker",
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                  SizedBox(height: 10,),
+                                  Text(
+                                    "Description",
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: const Text(
+                                  "Edit",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                    const SizedBox(height: 30,)
+                  ],
+                )
+              ),
             ),
         ]
       ),
