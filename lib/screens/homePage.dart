@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:ffi';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import '../components/navBar.dart';
@@ -41,6 +43,7 @@ class _HomePageState extends State<HomePage> {
   // );
 
   final Set<Marker> _markers = {};
+  double _zoomValue = 14.0;
 
   /// Geolocator Methods
 
@@ -71,6 +74,12 @@ class _HomePageState extends State<HomePage> {
   Future<void> _goToCurrentLocation(CameraPosition newPosition) async {
     final GoogleMapController controller = await _controller.future;
     controller.animateCamera(CameraUpdate.newCameraPosition(newPosition));
+  }
+
+  Future<void> _zoomInAndOut(double zoomingValue) async {
+    final GoogleMapController controller = await _controller.future;
+    _zoomValue += zoomingValue;
+    controller.animateCamera(CameraUpdate.zoomTo(_zoomValue));
   }
 
   /// Other methods
@@ -122,38 +131,53 @@ class _HomePageState extends State<HomePage> {
                   },
                 myLocationButtonEnabled: false,
                 onTap: _handleTap,
+                // onCameraMove: (CameraPosition cameraPosition) {
+                //   _zoomValue = cameraPosition.zoom;
+                // },
               ),
             ),
             Positioned(
-              bottom: 10,
-                right: 10,
-                child: FloatingActionButton(
-                  child: const Icon(Icons.pin_drop),
-                  onPressed: () async {
-                    Position position = await _determinePosition();
-
-                    _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14));
-
-                    setState(() {
-                      _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
-                    });
-                  },
+                bottom: 15,
+                right: 15,
+                child: SafeArea(
+                  child: FloatingActionButton(
+                    child: const Icon(Icons.pin_drop),
+                    onPressed: () async {
+                      Position position = await _determinePosition();
+                      _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: _zoomValue));
+                      setState(() {
+                        _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
+                      });
+                    },
+                  ),
+                )
+            ),
+            Positioned(
+                bottom: MediaQuery.of(context).size.height / 2,
+                right: 15,
+                child: Column(
+                  children: [
+                    FloatingActionButton.small(
+                      onPressed: () {
+                        setState(() {
+                          _zoomInAndOut(0.5);
+                        });
+                      },
+                      child: const Icon(Icons.add),
+                    ),
+                    FloatingActionButton.small(
+                      onPressed: () {
+                        setState(() {
+                          _zoomInAndOut(-0.5);
+                        });
+                      },
+                      child: const Icon(Icons.remove),
+                    ),
+                  ],
                 )
             ),
         ]
       ),
-      // floatingActionButton: FloatingActionButton(
-      //   child: const Icon(Icons.pin_drop),
-      //   onPressed: () async {
-      //     Position position = await _determinePosition();
-      //
-      //     _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: 14));
-      //
-      //     setState(() {
-      //       _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
-      //     });
-      //   },
-      // ),
     );
   }
 }
