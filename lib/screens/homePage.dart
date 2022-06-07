@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
@@ -106,15 +107,34 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0.0,
-        // More buttons in app bar
-        // actions: [
-        //   IconButton(
-        //     onPressed: () {},
-        //     icon: const Icon(Icons.holiday_village),
-        //   ),
-        // ],
+        title: const Text(
+          "iGPS",
+          style: TextStyle(
+            fontSize: 25,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        iconTheme: const IconThemeData(
+          size: 26.0,
+          color: Colors.white,
+        ),
+        backgroundColor: Colors.black.withOpacity(0.3),
+        actions: [
+          IconButton(
+            onPressed: () {
+              showModalBottomSheet(
+                context: context,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.0),
+                ),
+                builder: (context) => const BuildSheet(),
+              );
+            },
+            icon: const Icon(
+              Icons.brunch_dining_rounded,
+            ),
+          ),
+        ],
       ),
       extendBodyBehindAppBar: true,
       drawer: const NavBar(),
@@ -141,7 +161,8 @@ class _HomePageState extends State<HomePage> {
                 right: 15,
                 child: SafeArea(
                   child: FloatingActionButton(
-                    child: const Icon(Icons.pin_drop),
+                    backgroundColor: Colors.white,
+                    foregroundColor: Colors.lightBlue,
                     onPressed: () async {
                       Position position = await _determinePosition();
                       _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: _zoomValue));
@@ -149,6 +170,7 @@ class _HomePageState extends State<HomePage> {
                         _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
                       });
                     },
+                    child: const Icon(Icons.pin_drop),
                   ),
                 )
             ),
@@ -163,6 +185,8 @@ class _HomePageState extends State<HomePage> {
                           _zoomInAndOut(0.5);
                         });
                       },
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       child: const Icon(Icons.add),
                     ),
                     FloatingActionButton.small(
@@ -171,12 +195,52 @@ class _HomePageState extends State<HomePage> {
                           _zoomInAndOut(-0.5);
                         });
                       },
+                      backgroundColor: Colors.white,
+                      foregroundColor: Colors.black,
                       child: const Icon(Icons.remove),
                     ),
                   ],
                 )
             ),
         ]
+      ),
+    );
+  }
+}
+
+class BuildSheet extends StatelessWidget {
+  const BuildSheet({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10.0),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(50.0),
+        color: Colors.white,
+      ),
+      child: Column(
+        children: [
+          const SizedBox(
+            width: 40,
+            child: Divider(height: 3, thickness: 3,color: Colors.grey),
+          ),
+          ListTile(
+            leading: const Icon(Icons.add_location_rounded),
+            title: const Text("Add marker"),
+            onTap: () {
+
+            },
+          ),
+          const Divider(height: 1.0, color: Colors.grey, indent: 15.0, endIndent: 15.0,),
+          ListTile(
+            leading: const Icon(Icons.flutter_dash),
+            title: const Text("Show items"),
+            onTap: () {
+
+            },
+          ),
+        ],
       ),
     );
   }
