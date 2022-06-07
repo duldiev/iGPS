@@ -7,6 +7,11 @@ import 'package:flutter/material.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 
+enum CurrentAction {
+  NoAction,
+  MarkerAction,
+}
+
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
   @override
@@ -83,24 +88,39 @@ class _HomePageState extends State<HomePage> {
     controller.animateCamera(CameraUpdate.zoomTo(_zoomValue));
   }
 
+
+  /// Properties
+
+  CurrentAction currentAction = CurrentAction.NoAction;
+
   /// Other methods
 
   void _handleTap(LatLng tappedPoint) {
-    setState(() {
-      _markers.add(
-        Marker(
-          markerId: MarkerId(tappedPoint.toString()),
-          position: tappedPoint,
-          draggable: true,
-          onDragStart: (dragStartPosition) {
-          },
-          onDragEnd: (dragEndPosition) {
-          },
-          infoWindow: const InfoWindow(title: 'Marker'),
-          icon: BitmapDescriptor.defaultMarker,
-        ),
-      );
-    });
+    if (currentAction == CurrentAction.MarkerAction) {
+      setState(() {
+        _markers.add(
+          Marker(
+            markerId: MarkerId(tappedPoint.toString()),
+            position: tappedPoint,
+            draggable: true,
+            onDragStart: (dragStartPosition) {
+            },
+            onDragEnd: (dragEndPosition) {
+            },
+            infoWindow: const InfoWindow(title: 'Marker'),
+            icon: BitmapDescriptor.defaultMarker,
+          ),
+        );
+      });
+    }
+  }
+
+  IconData isMarkerDone() {
+    if (currentAction == CurrentAction.MarkerAction) {
+      return Icons.done;
+    } else {
+      return Icons.window;
+    }
   }
 
   @override
@@ -122,17 +142,32 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: () {
-              showModalBottomSheet(
-                context: context,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15.0),
-                ),
-                builder: (context) => const BuildSheet(),
-              );
+              if (currentAction == CurrentAction.MarkerAction) {
+                setState(() {
+                  currentAction = CurrentAction.NoAction;
+                });
+              } else {
+                showModalBottomSheet(
+                  context: context,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15.0),
+                  ),
+                  builder: (context) => BuildSheet(
+                    addMarkerPressed: () {
+                      setState(() {
+                        if (currentAction == CurrentAction.MarkerAction) {
+                          currentAction = CurrentAction.NoAction;
+                        } else {
+                          currentAction = CurrentAction.MarkerAction;
+                        }
+                        Navigator.pop(context);
+                      });
+                    },
+                  ),
+                );
+              }
             },
-            icon: const Icon(
-              Icons.brunch_dining_rounded,
-            ),
+            icon: Icon(isMarkerDone(),),
           ),
         ],
       ),
@@ -182,7 +217,7 @@ class _HomePageState extends State<HomePage> {
                     FloatingActionButton.small(
                       onPressed: () {
                         setState(() {
-                          _zoomInAndOut(0.5);
+                          _zoomInAndOut(0.45);
                         });
                       },
                       backgroundColor: Colors.white,
@@ -192,7 +227,7 @@ class _HomePageState extends State<HomePage> {
                     FloatingActionButton.small(
                       onPressed: () {
                         setState(() {
-                          _zoomInAndOut(-0.5);
+                          _zoomInAndOut(-0.45);
                         });
                       },
                       backgroundColor: Colors.white,
@@ -209,7 +244,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 class BuildSheet extends StatelessWidget {
-  const BuildSheet({Key? key}) : super(key: key);
+  const BuildSheet({Key? key, required this.addMarkerPressed}) : super(key: key);
+
+  final Function addMarkerPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -225,20 +262,27 @@ class BuildSheet extends StatelessWidget {
             width: 40,
             child: Divider(height: 3, thickness: 3,color: Colors.grey),
           ),
-          ListTile(
-            leading: const Icon(Icons.add_location_rounded),
-            title: const Text("Add marker"),
-            onTap: () {
-
-            },
+          const SizedBox(height: 10),
+          MaterialButton(
+            padding: const EdgeInsets.all(0),
+            onPressed: () => addMarkerPressed(),
+            child: const ListTile(
+              leading: Icon(Icons.add_location_rounded),
+              title: Text("Add marker"),
+              enableFeedback: true,
+            ),
           ),
           const Divider(height: 1.0, color: Colors.grey, indent: 15.0, endIndent: 15.0,),
-          ListTile(
-            leading: const Icon(Icons.flutter_dash),
-            title: const Text("Show items"),
-            onTap: () {
+          MaterialButton(
+            padding: const EdgeInsets.all(0),
+            onPressed: () {
 
             },
+            child: const ListTile(
+              leading: Icon(Icons.flutter_dash),
+              title: Text("Show items"),
+              enableFeedback: true,
+            ),
           ),
         ],
       ),
