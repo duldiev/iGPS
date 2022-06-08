@@ -118,7 +118,7 @@ class _HomePageState extends State<HomePage> {
         infoWindow: const InfoWindow(title: 'Marker'),
         icon: BitmapDescriptor.defaultMarker,
       );
-      if (currentAction == CurrentAction.MarkerAction) {
+      if (currentAction == CurrentAction.MarkerAction && markerPillPosition == PIN_INVISIBLE_POSITION) {
         _markers.add(newMarker);
       }
       markerPillPosition = PIN_INVISIBLE_POSITION;
@@ -236,6 +236,7 @@ class _HomePageState extends State<HomePage> {
                       foregroundColor: Colors.black,
                       child: const Icon(Icons.add),
                     ),
+                    const SizedBox(height: 5,),
                     FloatingActionButton.small(
                       heroTag: "zoomOut",
                       onPressed: () {
