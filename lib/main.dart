@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:igps/screens/WelcomePage.dart';
+import 'package:igps/screens/welcomePage.dart';
 import 'package:igps/screens/activesPage.dart';
 import 'package:igps/screens/notificationPage.dart';
 import 'package:igps/screens/settingsPage.dart';

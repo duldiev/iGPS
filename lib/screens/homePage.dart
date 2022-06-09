@@ -1,14 +1,15 @@
 import 'dart:async';
 import 'dart:ffi';
+import 'dart:ui';
+import 'dart:core';
+import 'package:checkmark/checkmark.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
-
-const double PIN_VISIBLE_POSITION = 15;
-const double PIN_INVISIBLE_POSITION = -220;
+import '../constants.dart';
 
 enum CurrentAction {
   NoAction,
@@ -23,6 +24,17 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
+  /// Properties
+
+  CurrentAction currentAction = CurrentAction.NoAction;
+
+  double markerPillPosition = Consts.positions.BOTTOMSHEET_INVISIBLE;
+  double attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
+
+  bool checkedAttention = false;
+  Set<Marker> _markers = {};
+  double _zoomValue = 14.0;
+
   /// Google Maps Methods
 
   Completer<GoogleMapController> _controller = Completer();
@@ -32,27 +44,13 @@ class _HomePageState extends State<HomePage> {
     zoom: 14.4746,
   );
 
-  // static const Marker _kGooglePlaxMarker = Marker(
-  //   markerId: MarkerId('_kGooglePlexMarker'),
-  //   infoWindow: InfoWindow(title: 'Google Plex'),
-  //   icon: BitmapDescriptor.defaultMarker,
-  //   position: LatLng(37.42796133580664, -122.085749655962),
-  // );
-
-  // static final Polygon _kPolygon = Polygon(
-  //   polygonId: PolygonId('_kPolygon'),
-  //   points: [
-  //     LatLng(37.42796133580664, -122.085749655962),
-  //     LatLng(37.43296265331129, -122.08832357078792),
-  //     LatLng(37.18, -121.0),
-  //   ],
-  //   strokeColor: Colors.red,
-  //   strokeWidth: 2,
-  //   fillColor: Colors.transparent,
-  // );
-
-  final Set<Marker> _markers = {};
-  double _zoomValue = 14.0;
+  Polygon _kPolygon = Polygon(
+    polygonId: PolygonId('_kPolygon'),
+    points: [],
+    strokeColor: Colors.red,
+    strokeWidth: 2,
+    fillColor: Colors.transparent,
+  );
 
   /// Geolocator Methods
 
@@ -91,13 +89,6 @@ class _HomePageState extends State<HomePage> {
     controller.animateCamera(CameraUpdate.zoomTo(_zoomValue));
   }
 
-
-  /// Properties
-
-  CurrentAction currentAction = CurrentAction.NoAction;
-
-  double markerPillPosition = PIN_INVISIBLE_POSITION;
-
   /// Other methods
 
   void _handleTap(LatLng tappedPoint) {
@@ -108,20 +99,57 @@ class _HomePageState extends State<HomePage> {
         draggable: true,
         onTap: () {
           setState(() {
-            markerPillPosition = PIN_VISIBLE_POSITION;
+            markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
           });
         },
         onDragStart: (dragStartPosition) {
-          markerPillPosition = PIN_VISIBLE_POSITION;
+          markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
+          for (int i = 0; i < _markers.length; i++) {
+            if (_markers.elementAt(i).position == tappedPoint) {
+              Marker tempMarker = _markers.elementAt(i).copyWith(positionParam: dragStartPosition);
+              _markers.removeWhere((element) => (element.position == tappedPoint));
+              _markers.add(tempMarker);
+            }
+          }
+          updatePolygon();
         },
-        onDragEnd: (dragEndPosition) {},
+        onDragEnd: (dragEndPosition) {
+          for (int i = 0; i < _markers.length; i++) {
+            if (_markers.elementAt(i).position == tappedPoint) {
+              Marker tempMarker = _markers.elementAt(i).copyWith(positionParam: dragEndPosition);
+              _markers.removeWhere((element) => (element.position == tappedPoint));
+              _markers.add(tempMarker);
+            }
+          }
+          updatePolygon();
+        },
         infoWindow: const InfoWindow(title: 'Marker'),
         icon: BitmapDescriptor.defaultMarker,
       );
-      if (currentAction == CurrentAction.MarkerAction && markerPillPosition == PIN_INVISIBLE_POSITION) {
+      if (currentAction == CurrentAction.MarkerAction && markerPillPosition == Consts.positions.BOTTOMSHEET_INVISIBLE && attentionPosition == Consts.positions.ATTENTION_INVISIBLE) {
         _markers.add(newMarker);
+        updatePolygon();
       }
-      markerPillPosition = PIN_INVISIBLE_POSITION;
+      markerPillPosition = Consts.positions.BOTTOMSHEET_INVISIBLE;
+    });
+  }
+
+  void updatePolygon() {
+    setState(() {
+      _kPolygon.points.clear();
+      for (var marker in _markers) {
+        _kPolygon.points.add(marker.position);
+      }
+    });
+  }
+
+  void changeCurrentAction() {
+    setState(() {
+      if (currentAction == CurrentAction.MarkerAction) {
+        currentAction = CurrentAction.NoAction;
+      } else {
+        currentAction = CurrentAction.MarkerAction;
+      }
     });
   }
 
@@ -163,14 +191,14 @@ class _HomePageState extends State<HomePage> {
                     borderRadius: BorderRadius.circular(15.0),
                   ),
                   builder: (context) => BuildSheet(
-                    addMarkerPressed: () {
+                    markersButtonPressed: () {
                       setState(() {
-                        if (currentAction == CurrentAction.MarkerAction) {
-                          currentAction = CurrentAction.NoAction;
-                        } else {
-                          currentAction = CurrentAction.MarkerAction;
-                        }
                         Navigator.pop(context);
+                        if (checkedAttention == false) {
+                          attentionPosition = MediaQuery.of(context).size.height * 0.3;
+                        } else {
+                          changeCurrentAction();
+                        }
                       });
                     },
                   ),
@@ -185,11 +213,12 @@ class _HomePageState extends State<HomePage> {
       drawer: const NavBar(),
       body: Stack(
           children: [
-            Positioned.fill(
-              child: GoogleMap(
+            Positioned.fill(child: GoogleMap(
                 mapType: MapType.hybrid,
                 markers: _markers,
-                polygons: const {},
+                polygons: {
+                  _kPolygon,
+                },
                 initialCameraPosition: _kGooglePlex,
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
@@ -336,6 +365,89 @@ class _HomePageState extends State<HomePage> {
                 )
               ),
             ),
+            AnimatedPositioned(
+              top: attentionPosition,
+              left: MediaQuery.of(context).size.width * 0.2,
+              right: MediaQuery.of(context).size.width * 0.2,
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInBack,
+              child: Container(
+                padding: const EdgeInsets.all(15),
+                decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20.0),
+                    color: Colors.white,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.5),
+                        blurRadius: 10,
+                        offset: Offset.zero,
+                      )
+                    ]
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: const [
+                        Text(
+                          "Attention",
+                          style: TextStyle(
+                            fontSize: 25,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        SizedBox(height: 15,),
+                        Text(
+                          "You can add markers by tapping on the map. \n\nAnd click on a marker to see more details. \n\nTo see list of the markers, tap on button on the top left corner.",
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20,),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: Checkbox(
+                                value: checkedAttention,
+                                onChanged: (value) {
+                                  setState(() {
+                                    checkedAttention = value!;
+                                  });
+                                },
+                              ),
+                            ),
+                            const SizedBox(width: 10,),
+                            const Text("Do not show again",),
+                          ],
+                        ),
+                        const SizedBox(height: 8,),
+                        ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
+                              changeCurrentAction();
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            primary: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10.0),
+                            ),
+                          ),
+                          child: const Text("OK"),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
         ]
       ),
     );
@@ -343,9 +455,9 @@ class _HomePageState extends State<HomePage> {
 }
 
 class BuildSheet extends StatelessWidget {
-  const BuildSheet({Key? key, required this.addMarkerPressed}) : super(key: key);
+  const BuildSheet({Key? key, required this.markersButtonPressed}) : super(key: key);
 
-  final Function addMarkerPressed;
+  final Function markersButtonPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -364,10 +476,10 @@ class BuildSheet extends StatelessWidget {
           const SizedBox(height: 10),
           MaterialButton(
             padding: const EdgeInsets.all(0),
-            onPressed: () => addMarkerPressed(),
+            onPressed: () => markersButtonPressed(),
             child: const ListTile(
               leading: Icon(Icons.add_location_rounded),
-              title: Text("Add marker"),
+              title: Text("Markers"),
               enableFeedback: true,
             ),
           ),
