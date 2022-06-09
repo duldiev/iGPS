@@ -10,6 +10,8 @@ import 'package:flutter/material.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 import '../constants.dart';
+import '../services/sortPointsClockwise.dart';
+import 'dart:math';
 
 enum CurrentAction {
   NoAction,
@@ -98,9 +100,7 @@ class _HomePageState extends State<HomePage> {
         position: tappedPoint,
         draggable: true,
         onTap: () {
-          setState(() {
-            markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
-          });
+          markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
         },
         onDragStart: (dragStartPosition) {
           markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
@@ -217,7 +217,7 @@ class _HomePageState extends State<HomePage> {
                 mapType: MapType.hybrid,
                 markers: _markers,
                 polygons: {
-                  _kPolygon,
+                  _kPolygon
                 },
                 initialCameraPosition: _kGooglePlex,
                 onMapCreated: (GoogleMapController controller) {
