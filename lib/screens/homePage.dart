@@ -100,28 +100,15 @@ class _HomePageState extends State<HomePage> {
         position: tappedPoint,
         draggable: true,
         onTap: () {
-          markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
+          setState(() {
+            markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
+          });
         },
         onDragStart: (dragStartPosition) {
           markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
-          for (int i = 0; i < _markers.length; i++) {
-            if (_markers.elementAt(i).position == tappedPoint) {
-              Marker tempMarker = _markers.elementAt(i).copyWith(positionParam: dragStartPosition);
-              _markers.removeWhere((element) => (element.position == tappedPoint));
-              _markers.add(tempMarker);
-            }
-          }
-          updatePolygon();
         },
-        onDragEnd: (dragEndPosition) {
-          for (int i = 0; i < _markers.length; i++) {
-            if (_markers.elementAt(i).position == tappedPoint) {
-              Marker tempMarker = _markers.elementAt(i).copyWith(positionParam: dragEndPosition);
-              _markers.removeWhere((element) => (element.position == tappedPoint));
-              _markers.add(tempMarker);
-            }
-          }
-          updatePolygon();
+        onDrag: (drag) {
+
         },
         infoWindow: const InfoWindow(title: 'Marker'),
         icon: BitmapDescriptor.defaultMarker,
