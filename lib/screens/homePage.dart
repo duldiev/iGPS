@@ -108,7 +108,7 @@ class _HomePageState extends State<HomePage> {
           markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
         },
         onDrag: (drag) {
-
+          
         },
         infoWindow: const InfoWindow(title: 'Marker'),
         icon: BitmapDescriptor.defaultMarker,
