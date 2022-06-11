@@ -105,28 +105,36 @@ class _HomePageState extends State<HomePage> {
           });
         },
         onDragStart: (dragStartPosition) {
-          markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
+          setState(() {
+
+          });
         },
-        onDrag: (drag) {
-          
+        onDrag: (dragPosition) {
+          setState(() {
+
+          });
+        },
+        onDragEnd: (dragEndPosition) {
+          setState(() {
+            for (var e in _markers) {
+              print(e.position);
+            }
+          });
         },
         infoWindow: const InfoWindow(title: 'Marker'),
         icon: BitmapDescriptor.defaultMarker,
       );
       if (currentAction == CurrentAction.MarkerAction && markerPillPosition == Consts.positions.BOTTOMSHEET_INVISIBLE && attentionPosition == Consts.positions.ATTENTION_INVISIBLE) {
         _markers.add(newMarker);
-        updatePolygon();
+        updatePolygon(newMarker.position);
       }
       markerPillPosition = Consts.positions.BOTTOMSHEET_INVISIBLE;
     });
   }
 
-  void updatePolygon() {
+  void updatePolygon(LatLng position) {
     setState(() {
-      _kPolygon.points.clear();
-      for (var marker in _markers) {
-        _kPolygon.points.add(marker.position);
-      }
+      _kPolygon.points.add(position);
     });
   }
 
