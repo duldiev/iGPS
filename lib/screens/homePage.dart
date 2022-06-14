@@ -1,22 +1,24 @@
 import 'dart:async';
-import 'dart:ffi';
 import 'dart:ui';
 import 'dart:core';
-import 'package:checkmark/checkmark.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
+import 'package:igps/model/MyMarker.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 import '../constants.dart';
-import '../services/sortPointsClockwise.dart';
 import 'dart:math';
 
 enum CurrentAction {
-  NoAction,
-  MarkerAction,
+  noAction,
+  markerAction,
 }
+
+double markerPillPosition = Consts.positions.MARKERPILL_INVISIBLE;
+double attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -26,35 +28,32 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
 
-  /// Properties
+  /// PROPERTIES
 
-  CurrentAction currentAction = CurrentAction.NoAction;
-
-  double markerPillPosition = Consts.positions.BOTTOMSHEET_INVISIBLE;
-  double attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
+  CurrentAction currentAction = CurrentAction.noAction;
 
   bool checkedAttention = false;
+
   Set<Marker> _markers = {};
+  Set<Polygon> _polygons = {};
+  List<LatLng> _points = [];
+
   double _zoomValue = 14.0;
 
-  /// Google Maps Methods
+  bool isMarkerSelected = false;
 
-  Completer<GoogleMapController> _controller = Completer();
+
+  /// GOOGLE MAPS METHODS
+
+  final Completer<GoogleMapController> _controller = Completer();
 
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
 
-  Polygon _kPolygon = Polygon(
-    polygonId: PolygonId('_kPolygon'),
-    points: [],
-    strokeColor: Colors.red,
-    strokeWidth: 2,
-    fillColor: Colors.transparent,
-  );
 
-  /// Geolocator Methods
+  /// GEOLOCATOR METHODS
 
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
@@ -91,70 +90,70 @@ class _HomePageState extends State<HomePage> {
     controller.animateCamera(CameraUpdate.zoomTo(_zoomValue));
   }
 
-  /// Other methods
+
+  /// OTHER METHODS
 
   void _handleTap(LatLng tappedPoint) {
     setState(() {
-      Marker newMarker = Marker(
-        markerId: MarkerId(tappedPoint.toString()),
-        position: tappedPoint,
-        draggable: true,
-        onTap: () {
-          setState(() {
-            markerPillPosition = Consts.positions.BOTTOMSHEET_VISIBLE;
-          });
-        },
-        onDragStart: (dragStartPosition) {
-          setState(() {
-
-          });
-        },
-        onDrag: (dragPosition) {
-          setState(() {
-
-          });
-        },
-        onDragEnd: (dragEndPosition) {
-          setState(() {
-            for (var e in _markers) {
-              print(e.position);
-            }
-          });
-        },
-        infoWindow: const InfoWindow(title: 'Marker'),
-        icon: BitmapDescriptor.defaultMarker,
-      );
-      if (currentAction == CurrentAction.MarkerAction && markerPillPosition == Consts.positions.BOTTOMSHEET_INVISIBLE && attentionPosition == Consts.positions.ATTENTION_INVISIBLE) {
+      if (currentAction == CurrentAction.markerAction &&
+          markerPillPosition == Consts.positions.MARKERPILL_INVISIBLE &&
+          attentionPosition == Consts.positions.ATTENTION_INVISIBLE) {
+        Marker newMarker = Marker(
+          markerId: MarkerId("marker-${_markers.length}"),
+          position: tappedPoint,
+          onTap: () {
+            setState(() {
+              markerPillPosition = Consts.positions.MARKERPILL_VISIBLE;
+              isMarkerSelected = true;
+            });
+          },
+          infoWindow: InfoWindow(title: 'Marker ${_markers.length}'),
+          icon: BitmapDescriptor.defaultMarker,
+        );
         _markers.add(newMarker);
-        updatePolygon(newMarker.position);
+        _points.add(newMarker.position);
+        _updatePolygon();
       }
-      markerPillPosition = Consts.positions.BOTTOMSHEET_INVISIBLE;
+      markerPillPosition = Consts.positions.MARKERPILL_INVISIBLE;
+      isMarkerSelected = false;
     });
   }
 
-  void updatePolygon(LatLng position) {
+  void _updatePolygon() {
     setState(() {
-      _kPolygon.points.add(position);
+      _polygons = {};
+      _polygons.add(
+        Polygon(
+          polygonId: const PolygonId("myPolygon"),
+          points: _points,
+          strokeColor: Colors.red,
+          strokeWidth: 2,
+          fillColor: Colors.transparent,
+        ),
+      );
     });
   }
 
-  void changeCurrentAction() {
+  void _changeCurrentAction() {
     setState(() {
-      if (currentAction == CurrentAction.MarkerAction) {
-        currentAction = CurrentAction.NoAction;
+      if (currentAction == CurrentAction.markerAction) {
+        currentAction = CurrentAction.noAction;
       } else {
-        currentAction = CurrentAction.MarkerAction;
+        currentAction = CurrentAction.markerAction;
       }
     });
   }
 
-  IconData isMarkerDone() {
-    if (currentAction == CurrentAction.MarkerAction) {
+  IconData _isMarkerDone() {
+    if (currentAction == CurrentAction.markerAction) {
       return Icons.done;
     } else {
       return Icons.window;
     }
   }
+
+
+  /// BUILD
 
   @override
   Widget build(BuildContext context) {
@@ -175,9 +174,9 @@ class _HomePageState extends State<HomePage> {
         actions: [
           IconButton(
             onPressed: () {
-              if (currentAction == CurrentAction.MarkerAction) {
+              if (currentAction == CurrentAction.markerAction) {
                 setState(() {
-                  currentAction = CurrentAction.NoAction;
+                  currentAction = CurrentAction.noAction;
                 });
               } else {
                 showModalBottomSheet(
@@ -192,7 +191,7 @@ class _HomePageState extends State<HomePage> {
                         if (checkedAttention == false) {
                           attentionPosition = MediaQuery.of(context).size.height * 0.3;
                         } else {
-                          changeCurrentAction();
+                          _changeCurrentAction();
                         }
                       });
                     },
@@ -200,7 +199,7 @@ class _HomePageState extends State<HomePage> {
                 );
               }
             },
-            icon: Icon(isMarkerDone(),),
+            icon: Icon(_isMarkerDone(),),
           ),
         ],
       ),
@@ -211,9 +210,7 @@ class _HomePageState extends State<HomePage> {
             Positioned.fill(child: GoogleMap(
                 mapType: MapType.hybrid,
                 markers: _markers,
-                polygons: {
-                  _kPolygon
-                },
+                polygons: _polygons,
                 initialCameraPosition: _kGooglePlex,
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
@@ -237,7 +234,13 @@ class _HomePageState extends State<HomePage> {
                       Position position = await _determinePosition();
                       _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: _zoomValue));
                       setState(() {
-                        _markers.add(Marker(markerId: const MarkerId('currentLocation'), position: LatLng(position.latitude, position.longitude)));
+                        _markers.add(
+                          Marker(
+                            markerId: const MarkerId('currentLocation'),
+                            position: LatLng(position.latitude, position.longitude),
+                            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
+                          ),
+                        );
                       });
                     },
                     child: const Icon(Icons.pin_drop),
@@ -249,6 +252,46 @@ class _HomePageState extends State<HomePage> {
                 right: 10,
                 child: Column(
                   children: [
+                    Visibility(
+                      visible: currentAction == CurrentAction.markerAction ? true : false,
+                      child: FloatingActionButton.small(
+                        heroTag: "undoAction",
+                        onPressed: () {
+                          setState(() {
+                            if (_points.length > 3) {
+                              _markers.removeWhere((element) => (element.position == _points.last));
+                              _points.removeLast();
+                              _updatePolygon();
+                            }
+                          });
+                        },
+                        backgroundColor: _points.length > 3 ? Colors.orange : Colors.grey,
+                        child: const Icon(
+                          Icons.undo,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 5,),
+                    Visibility(
+                      visible: currentAction == CurrentAction.markerAction ? true : false,
+                      child: FloatingActionButton.small(
+                        heroTag: "deleteMarkers",
+                        onPressed: () {
+                          setState(() {
+                            _markers = {};
+                            _points = [];
+                            _polygons = {};
+                          });
+                        },
+                        backgroundColor: _points.isNotEmpty ? Colors.red : Colors.grey,
+                        child: const Icon(
+                          Icons.delete,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 20,),
                     FloatingActionButton.small(
                       heroTag: "zoomIn",
                       onPressed: () {
@@ -281,83 +324,8 @@ class _HomePageState extends State<HomePage> {
               left: 15,
               duration: const Duration(milliseconds: 500),
               curve: Curves.easeInOut,
-              child: Container(
-                padding: const EdgeInsets.all(15),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20.0),
-                  color: Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.5),
-                      blurRadius: 10,
-                      offset: Offset.zero,
-                    )
-                  ]
-                ),
-                child: Column(
-                  children: [
-                    const SizedBox(
-                      width: 40,
-                      child: Divider(height: 3, thickness: 3,color: Colors.grey),
-                    ),
-                    const SizedBox(height: 25,),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const Expanded(
-                          flex: 1,
-                          child: ClipOval(
-                            child: Icon(
-                              Icons.location_on,
-                              size: 70.0,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 20,),
-                        Expanded(
-                          flex: 4,
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Column(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                                children: const [
-                                  Text(
-                                    "Marker",
-                                    style: TextStyle(
-                                      fontSize: 24,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                  SizedBox(height: 10,),
-                                  Text(
-                                    "Description",
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              TextButton(
-                                onPressed: () {},
-                                child: const Text(
-                                  "Edit",
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 30,)
-                  ],
-                )
+              child: const SafeArea(
+                child: MarkerPill(),
               ),
             ),
             AnimatedPositioned(
@@ -426,7 +394,7 @@ class _HomePageState extends State<HomePage> {
                           onPressed: () {
                             setState(() {
                               attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
-                              changeCurrentAction();
+                              _changeCurrentAction();
                             });
                           },
                           style: ElevatedButton.styleFrom(
@@ -448,6 +416,99 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+class MarkerPill extends StatefulWidget {
+  const MarkerPill({Key? key}) : super(key: key);
+
+  @override
+  State<MarkerPill> createState() => _MarkerPillState();
+}
+
+class _MarkerPillState extends State<MarkerPill> {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+        padding: const EdgeInsets.all(15),
+        height: 180,
+        decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20.0),
+            color: Colors.white,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.5),
+                blurRadius: 10,
+                offset: Offset.zero,
+              )
+            ]
+        ),
+        child: Column(
+          children: [
+            const SizedBox(
+              width: 40,
+              child: Divider(height: 3, thickness: 3,color: Colors.grey),
+            ),
+            const SizedBox(height: 25,),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                const Expanded(
+                  flex: 1,
+                  child: ClipOval(
+                    child: Icon(
+                      Icons.location_on,
+                      size: 70.0,
+                      color: Colors.red,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 20,),
+                Expanded(
+                  flex: 4,
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: const [
+                          Text(
+                            "Marker",
+                            style: TextStyle(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          SizedBox(height: 10,),
+                          Text(
+                            "Description",
+                            style: TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ],
+                      ),
+                      TextButton(
+                        onPressed: () {},
+                        child: const Text(
+                          "Edit",
+                          style: TextStyle(
+                            fontSize: 16,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+            const SizedBox(height: 30,)
+          ],
+        )
+    );
+  }
+}
+
 
 class BuildSheet extends StatelessWidget {
   const BuildSheet({Key? key, required this.markersButtonPressed}) : super(key: key);

@@ -37,10 +37,10 @@ class _NavBarState extends State<NavBar> {
           ),
           ListTile(
             leading: const Icon(FontAwesomeIcons.listUl, size: 20.0,),
-            title: const Text("Actives"),
+            title: const Text("Assets"),
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/actives');
+              Navigator.pushNamed(context, '/assets');
             },
           ),
           ListTile(
