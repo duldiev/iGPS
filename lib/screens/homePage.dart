@@ -1,7 +1,5 @@
 import 'dart:async';
-import 'dart:ui';
 import 'dart:core';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -184,7 +182,7 @@ class _HomePageState extends State<HomePage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(15.0),
                   ),
-                  builder: (context) => BuildSheet(
+                  builder: (context) => BottomSheet(
                     markersButtonPressed: () {
                       setState(() {
                         Navigator.pop(context);
@@ -509,9 +507,8 @@ class _MarkerPillState extends State<MarkerPill> {
   }
 }
 
-
-class BuildSheet extends StatelessWidget {
-  const BuildSheet({Key? key, required this.markersButtonPressed}) : super(key: key);
+class BottomSheet extends StatelessWidget {
+  const BottomSheet({Key? key, required this.markersButtonPressed}) : super(key: key);
 
   final Function markersButtonPressed;
 
