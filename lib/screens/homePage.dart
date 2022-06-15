@@ -5,6 +5,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:igps/model/MyMarker.dart';
+import 'package:igps/services/Language.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 import '../constants.dart';
@@ -350,17 +351,17 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: const [
-                        Text(
+                      children: [
+                        const Text(
                           "Attention",
                           style: TextStyle(
                             fontSize: 25,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
-                        SizedBox(height: 15,),
+                        const SizedBox(height: 15,),
                         Text(
-                          "You can add markers by tapping on the map. \n\nAnd click on a marker to see more details. \n\nTo see list of the markers, tap on button on the top left corner.",
+                          "${Language.attentionLanguage.firstLineText()!} \n\n${Language.attentionLanguage.secondLineText()!} \n\n${Language.attentionLanguage.thirdLineText()!}",
                         ),
                       ],
                     ),
@@ -384,7 +385,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             const SizedBox(width: 10,),
-                            const Text("Do not show again",),
+                            Text(Language.attentionLanguage.doNowShowAgainText(),),
                           ],
                         ),
                         const SizedBox(height: 8,),
