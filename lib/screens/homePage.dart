@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:core';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:igps/services/Language.dart';
@@ -26,7 +27,6 @@ class _HomePageState extends State<HomePage> {
 
   /// PROPERTIES
   CurrentAction currentAction = CurrentAction.noAction;
-
   bool checkedAttention = false;
 
   Set<Marker> _markers = {};
@@ -235,15 +235,8 @@ class _HomePageState extends State<HomePage> {
                       var currentLocationMarker = Marker(
                         markerId: const MarkerId('currentLocation'),
                         position: LatLng(position.latitude, position.longitude),
-                        icon: await MarkerIcon.downloadResizePictureCircle(
-                          'https://thegpscoordinates.net/photos/la/tehran_iran_5u679ezi8f.jpg',
-                          size: 150,
-                          addBorder: true,
-                          borderColor: Colors.green,
-                          borderSize: 2,
-                        ),
+                        icon: await MarkerIcon.pictureAsset(assetPath: 'images/test.png', width: 200, height: 200),
                       );
-
                       setState(() {
                         _markers.add(
                           currentLocationMarker,
