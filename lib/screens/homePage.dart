@@ -1,15 +1,18 @@
 import 'dart:async';
 import 'dart:core';
-import 'package:flutter/services.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/material.dart';
-import 'package:igps/model/MyMarker.dart';
 import 'package:igps/services/Language.dart';
 import '../components/navBar.dart';
 import 'package:geolocator/geolocator.dart';
 import '../constants.dart';
-import 'dart:math';
+import 'package:custom_marker/marker_icon.dart';
+
+class HomePage extends StatefulWidget {
+  const HomePage({Key? key}) : super(key: key);
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
 
 enum CurrentAction {
   noAction,
@@ -18,12 +21,6 @@ enum CurrentAction {
 
 double markerPillPosition = Consts.positions.MARKERPILL_INVISIBLE;
 double attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
-
-class HomePage extends StatefulWidget {
-  const HomePage({Key? key}) : super(key: key);
-  @override
-  State<HomePage> createState() => _HomePageState();
-}
 
 class _HomePageState extends State<HomePage> {
 
@@ -41,12 +38,11 @@ class _HomePageState extends State<HomePage> {
 
   bool isMarkerSelected = false;
 
-
   /// GOOGLE MAPS METHODS
 
   final Completer<GoogleMapController> _controller = Completer();
 
-  static const CameraPosition _kGooglePlex = CameraPosition(
+  static const CameraPosition initialCameraSet = CameraPosition(
     target: LatLng(37.42796133580664, -122.085749655962),
     zoom: 14.4746,
   );
@@ -151,6 +147,13 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  /// LIFECYCLE
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
 
   /// BUILD
 
@@ -210,7 +213,7 @@ class _HomePageState extends State<HomePage> {
                 mapType: MapType.hybrid,
                 markers: _markers,
                 polygons: _polygons,
-                initialCameraPosition: _kGooglePlex,
+                initialCameraPosition: initialCameraSet,
                 onMapCreated: (GoogleMapController controller) {
                   _controller.complete(controller);
                   },
@@ -232,13 +235,22 @@ class _HomePageState extends State<HomePage> {
                     onPressed: () async {
                       Position position = await _determinePosition();
                       _goToCurrentLocation(CameraPosition(target: LatLng(position.latitude, position.longitude), zoom: _zoomValue));
+
+                      var currentLocationMarker = Marker(
+                        markerId: const MarkerId('currentLocation'),
+                        position: LatLng(position.latitude, position.longitude),
+                        icon: await MarkerIcon.downloadResizePictureCircle(
+                          'https://thegpscoordinates.net/photos/la/tehran_iran_5u679ezi8f.jpg',
+                          size: 150,
+                          addBorder: true,
+                          borderColor: Colors.green,
+                          borderSize: 2,
+                        ),
+                      );
+
                       setState(() {
                         _markers.add(
-                          Marker(
-                            markerId: const MarkerId('currentLocation'),
-                            position: LatLng(position.latitude, position.longitude),
-                            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure),
-                          ),
+                          currentLocationMarker,
                         );
                       });
                     },
@@ -361,7 +373,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(height: 15,),
                         Text(
-                          "${Language.attentionLanguage.firstLineText()!} \n\n${Language.attentionLanguage.secondLineText()!} \n\n${Language.attentionLanguage.thirdLineText()!}",
+                          "${Language.attentionLanguage.firstLineText()} \n\n${Language.attentionLanguage.secondLineText()} \n\n${Language.attentionLanguage.thirdLineText()}",
                         ),
                       ],
                     ),
@@ -415,6 +427,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+/// Marker Pill Class
 
 class MarkerPill extends StatefulWidget {
   const MarkerPill({Key? key}) : super(key: key);
@@ -508,11 +522,18 @@ class _MarkerPillState extends State<MarkerPill> {
   }
 }
 
-class BottomSheet extends StatelessWidget {
+/// Bottom Sheet Class
+
+class BottomSheet extends StatefulWidget {
   const BottomSheet({Key? key, required this.markersButtonPressed}) : super(key: key);
 
   final Function markersButtonPressed;
 
+  @override
+  State<BottomSheet> createState() => _BottomSheetState();
+}
+
+class _BottomSheetState extends State<BottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -530,7 +551,7 @@ class BottomSheet extends StatelessWidget {
           const SizedBox(height: 10),
           MaterialButton(
             padding: const EdgeInsets.all(0),
-            onPressed: () => markersButtonPressed(),
+            onPressed: () => widget.markersButtonPressed(),
             child: const ListTile(
               leading: Icon(Icons.add_location_rounded),
               title: Text("Markers"),
@@ -545,7 +566,7 @@ class BottomSheet extends StatelessWidget {
             },
             child: const ListTile(
               leading: Icon(Icons.flutter_dash),
-              title: Text("Show items"),
+              title: Text("Tags"),
               enableFeedback: true,
             ),
           ),
