@@ -25,7 +25,6 @@ double attentionPosition = Consts.positions.ATTENTION_INVISIBLE;
 class _HomePageState extends State<HomePage> {
 
   /// PROPERTIES
-
   CurrentAction currentAction = CurrentAction.noAction;
 
   bool checkedAttention = false;
@@ -38,8 +37,8 @@ class _HomePageState extends State<HomePage> {
 
   bool isMarkerSelected = false;
 
-  /// GOOGLE MAPS METHODS
 
+  /// GOOGLE MAPS METHODS
   final Completer<GoogleMapController> _controller = Completer();
 
   static const CameraPosition initialCameraSet = CameraPosition(
@@ -49,7 +48,6 @@ class _HomePageState extends State<HomePage> {
 
 
   /// GEOLOCATOR METHODS
-
   Future<Position> _determinePosition() async {
     bool serviceEnabled;
     LocationPermission permission;
@@ -87,7 +85,6 @@ class _HomePageState extends State<HomePage> {
 
 
   /// OTHER METHODS
-
   void _handleTap(LatLng tappedPoint) {
     setState(() {
       if (currentAction == CurrentAction.markerAction &&
@@ -147,8 +144,8 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  /// LIFECYCLE
 
+  /// LIFECYCLE
   @override
   void initState() {
     super.initState();
@@ -156,7 +153,6 @@ class _HomePageState extends State<HomePage> {
 
 
   /// BUILD
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
