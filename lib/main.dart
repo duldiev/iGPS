@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:igps/screens/welcomePage.dart';
-import 'package:igps/screens/activesPage.dart';
-import 'package:igps/screens/notificationPage.dart';
-import 'package:igps/screens/settingsPage.dart';
+import 'package:igps/screens/welcome_page.dart';
+import 'package:igps/screens/actives_page.dart';
+import 'package:igps/screens/notification_page.dart';
+import 'package:igps/screens/settings_page.dart';
 
 // Google maps API Key - AIzaSyBZOylElqUTJ2l69VN5sjTTkWRqRIysypU
 

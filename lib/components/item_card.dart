@@ -1,34 +1,5 @@
 import 'package:flutter/material.dart';
 
-class AssetsPage extends StatefulWidget {
-  const AssetsPage({Key? key}) : super(key: key);
-
-  @override
-  State<AssetsPage> createState() => _AssetsPageState();
-}
-
-class _AssetsPageState extends State<AssetsPage> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Actives'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: const [
-            ItemCard(),
-            SizedBox(height: 15,),
-            ItemCard(),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
 class ItemCard extends StatelessWidget {
   const ItemCard({
     Key? key,
@@ -38,16 +9,16 @@ class ItemCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10.0),
-        color: Colors.white,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.2),
-            offset: const Offset(0, 0),
-            spreadRadius: 2,
-            blurRadius: 5,
-          ),
-        ]
+          borderRadius: BorderRadius.circular(10.0),
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              offset: const Offset(0, 0),
+              spreadRadius: 2,
+              blurRadius: 5,
+            ),
+          ]
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
